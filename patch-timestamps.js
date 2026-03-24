@@ -87,9 +87,10 @@ let patchCount = 0;
         const reactVar = reactMatch[1];
         const boxVar = reactMatch[2];
 
-        // Find the Text var
-        const textMatch = searchBefore.match(/\.createElement\((\w+),\{dimColor:/);
-        const textVar = textMatch ? textMatch[1] : 'T';
+        // Find the Text var (search wider area since dimColor may not be near the call site)
+        const textSearchBefore = code.substring(Math.max(0, markerIdx - 5000), markerIdx);
+        const textMatch = textSearchBefore.match(/\.createElement\((\w+),\{dimColor:/);
+        const textVar = textMatch ? textMatch[1] : 'v';
 
         // Find the start of the row createElement(BOX,{flexDirection:"row"},
         const rowStartStr = `${reactVar}.default.createElement(${boxVar},{flexDirection:"row"},`;
