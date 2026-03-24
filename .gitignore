@@ -1,2 +1,6 @@
 .DS_Store
+result
+test-cli.js
+cli.js
+node_modules/
 
