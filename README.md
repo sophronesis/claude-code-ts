@@ -1,3 +1,58 @@
+# Claude Code TS (modified fork)
+
+> **This is a modified version of [Claude Code](https://github.com/anthropics/claude-code)** packaged as a Nix flake. It patches the minified `cli.js` at build time to add:
+>
+> - **HH:MM:SS timestamps on tool-use headers** - each tool call (Bash, Edit, Write, Read, Grep, Glob, etc.) shows when it was executed
+> - **Periodic statusLine auto-refresh** - adds `statusLine.updateInterval` setting (seconds) so the status bar updates on a timer, not just on events
+>
+> The binary is called `claude-ts`. Everything else is stock Claude Code.
+
+### Timestamp patches
+
+Two regex patches find stable structural patterns in the minified code and inject timestamp elements:
+
+1. **Individual tool headers** (Bash, Edit, Write, etc.) - adds a timestamp to the right side of each tool-use header
+2. **Collapsed read/search groups** (Read, Grep, Glob summaries) - wraps the summary row and appends a timestamp
+
+### Periodic statusLine
+
+Stock Claude Code's statusLine only updates on events (new messages, permission changes). This fork adds:
+
+- **Patch 3a**: extends the Zod settings schema to accept `updateInterval` (number, optional)
+- **Patch 3b**: injects a `setInterval` in the statusLine component's mount effect
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "date '+%H:%M:%S'",
+    "updateInterval": 5
+  }
+}
+```
+
+### Install (Nix flake)
+
+```nix
+# flake input
+claude-ts.url = "gitlab:sophronesis/claude-code-ts";
+
+# in packages
+inputs.claude-ts.packages.${system}.default
+```
+
+Or build directly:
+```bash
+nix build gitlab:sophronesis/claude-code-ts
+./result/bin/claude-ts
+```
+
+---
+
+*Below is the original Claude Code README.*
+
+---
+
 # Claude Code
 
 ![](https://img.shields.io/badge/Node.js-18%2B-brightgreen?style=flat-square) [![npm]](https://www.npmjs.com/package/@anthropic-ai/claude-code)
