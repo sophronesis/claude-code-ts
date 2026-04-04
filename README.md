@@ -33,14 +33,6 @@ Stock Claude Code's statusLine only updates on events (new messages, permission 
 
 ### Install (Nix flake)
 
-```nix
-# flake input
-claude-ts.url = "gitlab:sophronesis/claude-code-ts";
-
-# in packages
-inputs.claude-ts.packages.${system}.default
-```
-
 Quick install (requires [nix](https://nixos.org/download/)):
 ```bash
 nix profile install gitlab:sophronesis/claude-code-ts
@@ -51,6 +43,15 @@ Or build without installing:
 ```bash
 nix build gitlab:sophronesis/claude-code-ts
 ./result/bin/claude-ts
+```
+
+As a NixOS/home-manager flake input:
+```nix
+# flake input
+claude-ts.url = "gitlab:sophronesis/claude-code-ts";
+
+# in packages
+inputs.claude-ts.packages.${system}.default
 ```
 
 ---
