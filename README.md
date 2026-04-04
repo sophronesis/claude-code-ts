@@ -41,7 +41,13 @@ claude-ts.url = "gitlab:sophronesis/claude-code-ts";
 inputs.claude-ts.packages.${system}.default
 ```
 
-Or build directly:
+Quick install (requires [nix](https://nixos.org/download/)):
+```bash
+nix profile install gitlab:sophronesis/claude-code-ts
+claude-ts
+```
+
+Or build without installing:
 ```bash
 nix build gitlab:sophronesis/claude-code-ts
 ./result/bin/claude-ts
