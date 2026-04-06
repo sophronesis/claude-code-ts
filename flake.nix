@@ -7,8 +7,9 @@
 
   outputs = { self, nixpkgs }:
     let
+      lib = nixpkgs.lib;
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-      forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+      forAllSystems = lib.genAttrs supportedSystems;
     in
     {
       packages = forAllSystems (system:
@@ -21,16 +22,45 @@
         {
           default = self.packages.${system}.claude-ts;
 
-          claude-ts = pkgs.claude-code.overrideAttrs (oldAttrs: {
+          claude-ts = pkgs.buildNpmPackage {
             pname = "claude-ts";
             version = "2.1.92";
 
-            src = pkgs.fetchurl {
+            src = pkgs.fetchzip {
               url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.92.tgz";
-              hash = "sha256-//iF+Rbms6cYU1WWAa8Sq7G2RxTPwvBjWiVhO5Z0k0c=";
+              hash = "sha256-CLLCtVK3TeXFZ8wBnRRHNc2MoUt7lTdMJwz8sZHpkFM=";
             };
 
-            postFixup = (oldAttrs.postFixup or "") + ''
+            npmDepsHash = "sha256-5LvH7fG5pti2SiXHQqgRxfFpxaXxzrmGxIoPR4dGE+8=";
+
+            strictDeps = true;
+            dontNpmBuild = true;
+            env.AUTHORIZED = "1";
+
+            postPatch = ''
+              cp ${./package-lock.json} package-lock.json
+              substituteInPlace cli.js \
+                --replace-fail '#!/bin/sh' '#!/usr/bin/env sh'
+            '';
+
+            postInstall = ''
+              wrapProgram $out/bin/claude \
+                --set DISABLE_AUTOUPDATER 1 \
+                --set-default FORCE_AUTOUPDATE_PLUGINS 1 \
+                --set DISABLE_INSTALLATION_CHECKS 1 \
+                --unset DEV \
+                --prefix PATH : ${
+                  lib.makeBinPath (
+                    [ pkgs.procps ]
+                    ++ lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+                      pkgs.bubblewrap
+                      pkgs.socat
+                    ]
+                  )
+                }
+            '';
+
+            postFixup = ''
               # Patch cli.js to add timestamps on tool use headers
               ${pkgs.nodejs}/bin/node ${./patch-timestamps.js} \
                 $out/lib/node_modules/@anthropic-ai/claude-code/cli.js
@@ -39,11 +69,13 @@
               ln -s $out/bin/claude $out/bin/claude-ts
             '';
 
-            meta = oldAttrs.meta // {
+            meta = {
               description = "Claude Code with timestamps on tool use blocks";
+              homepage = "https://github.com/anthropics/claude-code";
+              license = lib.licenses.unfree;
               mainProgram = "claude-ts";
             };
-          });
+          };
         }
       );
 
