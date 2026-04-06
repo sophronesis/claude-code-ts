@@ -23,6 +23,12 @@
 
           claude-ts = pkgs.claude-code.overrideAttrs (oldAttrs: {
             pname = "claude-ts";
+            version = "2.1.92";
+
+            src = pkgs.fetchurl {
+              url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.92.tgz";
+              hash = "sha256-//iF+Rbms6cYU1WWAa8Sq7G2RxTPwvBjWiVhO5Z0k0c=";
+            };
 
             postFixup = (oldAttrs.postFixup or "") + ''
               # Patch cli.js to add timestamps on tool use headers
