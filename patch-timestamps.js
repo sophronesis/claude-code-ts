@@ -2,9 +2,11 @@
 // Patches Claude Code cli.js to add timestamps on tool use headers.
 // Usage: node patch-timestamps.js [path-to-cli.js]
 //
-// Two patches:
+// Patches:
 //   1. Individual tool headers (Bash, Edit, Write, etc.)
 //   2. Collapsed read/search groups (Read, Grep, Glob summary lines)
+// Removed (now native in claude-code >= 2.1.104):
+//   3a/3b. StatusLine refreshInterval - use settings.json statusLine.refreshInterval instead
 
 const fs = require('fs');
 const filepath = process.argv[2] || 'cli.js';
@@ -140,49 +142,8 @@ let patchCount = 0;
   }
 }
 
-// ─── Patch 3a: Add updateInterval to statusLine Zod schema ───
-// Without this, Zod strips the unknown field during settings parsing.
-// The Zod variable name changes between versions (S, E, etc.) so we match dynamically.
-{
-  const schemaRe = /statusLine:(\w+)\.object\(\{type:\1\.literal\("command"\),command:\1\.string\(\),padding:\1\.number\(\)\.optional\(\)\}\)\.optional\(\)/;
-  const schemaMatch = code.match(schemaRe);
-  if (schemaMatch) {
-    const z = schemaMatch[1];
-    const newSchema = `statusLine:${z}.object({type:${z}.literal("command"),command:${z}.string(),padding:${z}.number().optional(),updateInterval:${z}.number().optional()}).optional()`;
-    code = code.replace(schemaMatch[0], newSchema);
-    patchCount++;
-    console.log(`Patch 3a applied: added updateInterval to statusLine schema (zod=${z})`);
-  } else {
-    console.warn('Patch 3a: statusLine Zod schema not found');
-  }
-}
-
-// ─── Patch 3b: Periodic statusLine updates ───
-// Find the statusLine component's mount/unmount useEffect and inject a setInterval
-// when statusLine.updateInterval (seconds) is configured in settings.
-// Pattern: useEffect(()=>{return FUNC(),()=>{if(REF.abort(),REF.clearTimeout)}},[]);let VAR=SETTINGS?.statusLine?.padding
-{
-  const re = /useEffect\(\(\)=>\{return (\w+)\(\),\(\)=>\{if\((\w+)\.current\?\.abort\(\),(\w+)\.current!==void 0\)clearTimeout\(\3\.current\)\}\},\[\]\);(let \w+=)([\w$]+)(\?\.statusLine\?\.padding)/;
-  const match = code.match(re);
-
-  if (match) {
-    const funcVar = match[1];     // f  - the update function
-    const abortRef = match[2];    // Y  - abort controller ref
-    const timerRef = match[3];    // P  - debounce timer ref
-    const letPart = match[4];     // "let k="
-    const settingsVar = match[5]; // $  - settings object
-    const paddingPart = match[6]; // "?.statusLine?.padding"
-
-    const original = match[0];
-    const patched = `useEffect(()=>{var __slInt;var __slIv=${settingsVar}?.statusLine?.updateInterval;if(__slIv&&__slIv>0)__slInt=setInterval(${funcVar},__slIv*1000);return ${funcVar}(),()=>{if(__slInt)clearInterval(__slInt);if(${abortRef}.current?.abort(),${timerRef}.current!==void 0)clearTimeout(${timerRef}.current)}},[]);${letPart}${settingsVar}${paddingPart}`;
-
-    code = code.replace(original, patched);
-    patchCount++;
-    console.log(`Patch 3b applied: periodic statusLine updates (func=${funcVar}, settings=${settingsVar})`);
-  } else {
-    console.warn('Patch 3b: statusLine mount effect pattern not found');
-  }
-}
+// Patches 3a/3b (statusLine refreshInterval) removed - now built into claude-code natively.
+// Use settings.json: statusLine.refreshInterval (seconds) instead of updateInterval.
 
 // ─── Write result ───
 if (patchCount > 0) {

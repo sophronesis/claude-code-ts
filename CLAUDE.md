@@ -22,11 +22,15 @@ There are no tests or lint commands - verification is a `node --check cli.js` sy
 Two files matter:
 
 - **`flake.nix`** - Overrides `pkgs.claude-code` with a `postFixup` that runs the patch script and creates a `claude-ts` symlink.
-- **`patch-timestamps.js`** - Node.js script that regex-patches the minified `cli.js`. Applies two patches:
+- **`patch-timestamps.js`** - Node.js script that regex-patches the minified `cli.js`. Applies these patches:
   1. **Individual tool headers** (Bash, Edit, Write, etc.) - Finds React `createElement` calls with `justifyContent:"space-between"` near `resolvedToolUseIDs`/`renderToolUseTag`, then injects a timestamp element as a second child.
   2. **Collapsed read/search groups** (Read, Grep, Glob summaries) - Finds `TeamMemCountParts` calls, wraps the row in a `space-between` container, and appends a timestamp element. Also patches the outer column to add `width:"100%"`.
 
-Both patches use `globalThis.__toolTs` as a cache keyed by tool ID to prevent timestamp re-renders.
+Timestamp patches use `globalThis.__toolTs` as a cache keyed by tool ID.
+
+### Previously patched, now native
+
+- **StatusLine auto-refresh** (patches 3a/3b) - Added `updateInterval` to the statusLine Zod schema and injected a `setInterval` for periodic updates. As of claude-code 2.1.104, this is built-in as `refreshInterval` in the statusLine settings.
 
 ## Updating for New Claude Code Versions
 

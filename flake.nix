@@ -24,14 +24,14 @@
 
           claude-ts = pkgs.buildNpmPackage {
             pname = "claude-ts";
-            version = "2.1.92";
+            version = "2.1.104";
 
             src = pkgs.fetchzip {
-              url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.92.tgz";
-              hash = "sha256-CLLCtVK3TeXFZ8wBnRRHNc2MoUt7lTdMJwz8sZHpkFM=";
+              url = "https://registry.npmjs.org/@anthropic-ai/claude-code/-/claude-code-2.1.104.tgz";
+              hash = "sha256-Cjf7xYaIPR0xrwEG91/HIt0/2sU+t2mXbadzP2VFucU=";
             };
 
-            npmDepsHash = "sha256-5LvH7fG5pti2SiXHQqgRxfFpxaXxzrmGxIoPR4dGE+8=";
+            npmDepsHash = "sha256-o9eaCZpAuoa9pCpEOmIKK3MlvBXSCuSENrbqXV21X1Q=";
 
             strictDeps = true;
             dontNpmBuild = true;
